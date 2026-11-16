@@ -4,7 +4,7 @@ Teil von **M324 Projekt 4: Ticketsystem**. Team-Repo: [m324-ap23a-team3/team](ht
 
 - Stack: C# / ASP.NET Core Web API (.NET 10), Tests mit xUnit
 - Pipeline: `.github/workflows/ci.yml` – Tests bei jedem Push und Pull Request, Image nach `ghcr.io/m324-ap23a-team3/ms1` bei Push auf `main`
-- Code Owner: Team `dev` (Maintain); Team `ops` hat Write (Branch + Pull Request)
+- Rechte: Team `devops` (alle Mitglieder, Maintain). `main` ist geschützt: Pull Request mit 1 Approval und grünem Check `test`
 
 ## Lokal
 
