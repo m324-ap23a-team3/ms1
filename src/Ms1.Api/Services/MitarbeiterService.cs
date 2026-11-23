@@ -62,6 +62,25 @@ public class MitarbeiterService(IMitarbeiterRepository repository, ILogger<Mitar
         }
     }
 
+    /// <summary>
+    /// US2: Liest alle Mitarbeiter. Eine leere Liste ist kein Fehler, sondern ergibt eine Meldung (AK5).
+    /// </summary>
+    public async Task<ServiceErgebnis<MitarbeiterListeResponse>> AlleAuslesenAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var mitarbeiter = await repository.AlleLesenAsync(cancellationToken);
+            var liste = mitarbeiter.Select(MitarbeiterResponse.Aus).ToList();
+            return ServiceErgebnis<MitarbeiterListeResponse>.Erfolg(MitarbeiterListeResponse.Aus(liste));
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogError(ex, "Mitarbeiter konnten nicht geladen werden");
+            return ServiceErgebnis<MitarbeiterListeResponse>.Fehler(
+                "Die Mitarbeiter konnten wegen eines Datenbankfehlers nicht geladen werden. Bitte später erneut versuchen.");
+        }
+    }
+
     private static string? PruefeName(string? wert, string feld, string anzeigename, Dictionary<string, string[]> fehler)
     {
         var name = wert?.Trim();
