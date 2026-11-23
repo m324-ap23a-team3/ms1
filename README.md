@@ -39,3 +39,12 @@ Das Passwort in `docker-compose.yml` und `appsettings.Development.json` gilt nur
 ## Architektur
 
 Endpoints → Service → `IMitarbeiterRepository` → EF Core/MariaDB. Die Tests ersetzen das Repository durch `FakeMitarbeiterRepository` und laufen ohne Datenbank. Beschreibung: [team/docs/Applikation.md](https://github.com/m324-ap23a-team3/team/blob/main/docs/Applikation.md#ms1-testbare-architektur)
+
+## Tests
+
+`dotnet test` – alle Tests laufen ohne Datenbank (Repository durch `FakeMitarbeiterRepository` ersetzt). Jeder Test ist im Code mit `/// <summary>` beschrieben (Was wird geprüft, Happy oder Sad Path, welches Abnahmekriterium).
+
+| Datei | Ebene | Inhalt |
+|---|---|---|
+| `tests/Ms1.Api.Tests/US1/MitarbeiterErfassenServiceTests.cs` | Unit (Service) | US1: gültiger Mitarbeiter, Grenzwerte, Datumsformate, Skilllevel 0/6, fehlende Felder, DB-Fehler |
+| `tests/Ms1.Api.Tests/US1/MitarbeiterErfassenApiTests.cs` | API (HTTP) | US1: 201 mit Mitarbeiter, 400 mit Meldung pro Feld, ungültiges JSON, 503 bei DB-Fehler |
