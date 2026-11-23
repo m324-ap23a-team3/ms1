@@ -95,6 +95,22 @@ public class MitarbeiterErfassenApiTests : IClassFixture<Ms1ApiFactory>
     }
 
     /// <summary>
+    /// Sad Path (AK4): Auch eine Zahl in Anführungszeichen (<c>"skilllevel": "4"</c>) wird abgelehnt,
+    /// weil der Skilllevel als JSON-Zahl erwartet wird (so steht es auch in der OpenAPI-Beschreibung).
+    /// </summary>
+    [Fact]
+    public async Task Post_mit_Skilllevel_als_Zahl_in_Anfuehrungszeichen_liefert_400()
+    {
+        var json = """{"vorname":"Max","nachname":"Muster","beitrittsdatum":"15.05.2021","skilllevel":"4"}""";
+
+        var response = await _client.PostAsync(Route, new StringContent(json, Encoding.UTF8, "application/json"));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+        Assert.True(problem!.Errors.ContainsKey("skilllevel"));
+    }
+
+    /// <summary>
     /// Sad Path (AK8): Ungültiges JSON ergibt 400 mit einer Meldung beim Feld <c>body</c>.
     /// </summary>
     [Fact]

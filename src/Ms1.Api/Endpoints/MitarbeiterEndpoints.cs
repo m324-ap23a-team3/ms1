@@ -17,11 +17,24 @@ public static class MitarbeiterEndpoints
         var gruppe = app.MapGroup(Route).WithTags("Mitarbeiter");
 
         gruppe.MapPost("", ErfassenAsync)
-            .WithName("MitarbeiterErfassen");
+            .WithName("MitarbeiterErfassen")
+            .WithSummary("US1: Mitarbeiter erfassen")
+            .WithDescription(
+                "Erfasst einen neuen Mitarbeiter. Alle Felder sind Pflicht. Die ID vergibt der Service automatisch. " +
+                "Beitrittsdatum im Format TT.MM.JJJJ (z. B. 15.05.2021) oder JJJJ-MM-TT, Skilllevel ganze Zahl von 1 bis 5. " +
+                "Bei ungültigen Eingaben kommt 400 mit einer Meldung pro Feld in `errors`.")
+            .Accepts<MitarbeiterErfassenRequest>("application/json")
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
         // Wird auch von MS2 (US3) verwendet, um zu prüfen, ob ein Mitarbeiter existiert
         gruppe.MapGet("", AlleAuslesenAsync)
-            .WithName("MitarbeiterAuslesen");
+            .WithName("MitarbeiterAuslesen")
+            .WithSummary("US2: Alle Mitarbeiter auslesen")
+            .WithDescription(
+                "Liefert alle erfassten Mitarbeiter mit allen Feldern, sortiert nach ID. " +
+                "Ist noch niemand erfasst, kommt 200 mit leerer Liste und einer Meldung. " +
+                "MS2 verwendet diesen Endpunkt, um bei US3 zu prüfen, ob ein Mitarbeiter existiert (Feld `mitarbeiter[].id`).")
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
         return app;
     }
