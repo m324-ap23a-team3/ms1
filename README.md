@@ -48,3 +48,6 @@ Endpoints → Service → `IMitarbeiterRepository` → EF Core/MariaDB. Die Test
 |---|---|---|
 | `tests/Ms1.Api.Tests/US1/MitarbeiterErfassenServiceTests.cs` | Unit (Service) | US1: gültiger Mitarbeiter, Grenzwerte, Datumsformate, Skilllevel 0/6, fehlende Felder, DB-Fehler |
 | `tests/Ms1.Api.Tests/US1/MitarbeiterErfassenApiTests.cs` | API (HTTP) | US1: 201 mit Mitarbeiter, 400 mit Meldung pro Feld, ungültiges JSON, 503 bei DB-Fehler |
+| `tests/Ms1.Api.Tests/US2/MitarbeiterAuslesenServiceTests.cs` | Unit (Service) | US2: Liste mit Einträgen, leere Liste mit Meldung, Fehler beim Laden, 10'000 Einträge |
+| `tests/Ms1.Api.Tests/US2/MitarbeiterAuslesenApiTests.cs` | API (HTTP) | US2: erfasster Mitarbeiter erscheint in der Übersicht, leere Liste, JSON-Format für MS2, 503, 405 |
+| `tests/Ms1.Api.Tests/US2/MitarbeiterRepositoryTests.cs` | Repository (EF InMemory) | US2 AK4: kein Change-Tracking, Sortierung nach ID |
