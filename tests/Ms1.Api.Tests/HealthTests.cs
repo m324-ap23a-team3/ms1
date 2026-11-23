@@ -1,11 +1,12 @@
 using System.Net;
-using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Ms1.Api.Tests;
 
-public class HealthTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+public class HealthTests(Ms1ApiFactory factory) : IClassFixture<Ms1ApiFactory>
 {
+    /// <summary>
+    /// Der Health-Endpunkt antwortet mit 200, auch ohne laufende Datenbank.
+    /// </summary>
     [Fact]
     public async Task Health_liefert_200()
     {
