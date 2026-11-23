@@ -1,0 +1,25 @@
+# Lokale Datenbank fuer MS1 (nur Entwicklung).
+# Start: docker compose up -d   ·   Stopp: docker compose down   ·   Daten loeschen: docker compose down -v
+# Das Passwort gilt nur fuer die lokale DB. In Staging/Produktion kommt der Connection-String
+# als Secret ueber die Umgebungsvariable ConnectionStrings__Ms1Db (P4).
+services:
+  ms1-db:
+    image: mariadb:11.4
+    container_name: ms1-db
+    environment:
+      MARIADB_DATABASE: ms1
+      MARIADB_USER: ms1
+      MARIADB_PASSWORD: ${MS1_DB_PASSWORT:-ms1-lokal}
+      MARIADB_ROOT_PASSWORD: ${MS1_DB_ROOT_PASSWORT:-ms1-root-lokal}
+    ports:
+      - "${MS1_DB_PORT:-3306}:3306"
+    volumes:
+      - ms1-db-daten:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  ms1-db-daten:
