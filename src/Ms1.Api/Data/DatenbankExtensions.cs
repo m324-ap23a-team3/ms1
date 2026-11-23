@@ -25,9 +25,13 @@ public static class DatenbankExtensions
                 ?? throw new InvalidOperationException(
                     $"Connection-String '{ConnectionStringName}' fehlt. Setze ihn in appsettings oder als Umgebungsvariable ConnectionStrings__{ConnectionStringName}.");
 
-            // Wiederholt Verbindungsfehler, z. B. wenn der DB-Container beim Start noch nicht bereit ist
-            options.UseMySql(connectionString, ServerVersion, mysql => mysql.EnableRetryOnFailure());
+            // Wiederholt kurze Verbindungsfehler. Bewusst knapp (3 Versuche, max. 5 s), damit ein Client bei
+            // einer ausgefallenen DB nach Sekunden eine 503-Meldung bekommt statt nach über einer Minute.
+            options.UseMySql(connectionString, ServerVersion, mysql =>
+                mysql.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorNumbersToAdd: null));
         });
+
+        services.AddScoped<IMitarbeiterRepository, MitarbeiterRepository>();
 
         return services;
     }
