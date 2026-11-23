@@ -19,8 +19,29 @@ public static class MitarbeiterEndpoints
         gruppe.MapPost("", ErfassenAsync)
             .WithName("MitarbeiterErfassen");
 
+        // Wird auch von MS2 (US3) verwendet, um zu prüfen, ob ein Mitarbeiter existiert
+        gruppe.MapGet("", AlleAuslesenAsync)
+            .WithName("MitarbeiterAuslesen");
+
         return app;
     }
+
+    /// <summary>US2: Alle Mitarbeiter auslesen.</summary>
+    internal static async Task<Results<Ok<MitarbeiterListeResponse>, ProblemHttpResult>> AlleAuslesenAsync(
+        MitarbeiterService service,
+        CancellationToken cancellationToken)
+    {
+        var ergebnis = await service.AlleAuslesenAsync(cancellationToken);
+
+        return ergebnis.Art == ErgebnisArt.Erfolg
+            ? TypedResults.Ok(ergebnis.Wert)
+            : DatenbankNichtVerfuegbar(ergebnis.Fehlermeldung);
+    }
+
+    private static ProblemHttpResult DatenbankNichtVerfuegbar(string? meldung) => TypedResults.Problem(
+        meldung,
+        statusCode: StatusCodes.Status503ServiceUnavailable,
+        title: "Datenbank nicht verfügbar");
 
     /// <summary>US1: Mitarbeiter erfassen.</summary>
     internal static async Task<Results<Created<MitarbeiterResponse>, ValidationProblem, ProblemHttpResult>> ErfassenAsync(
@@ -39,10 +60,7 @@ public static class MitarbeiterEndpoints
                 ergebnis.Validierungsfehler.ToDictionary(),
                 title: "Die Eingaben sind ungültig.",
                 detail: "Bitte die markierten Felder korrigieren."),
-            _ => TypedResults.Problem(
-                ergebnis.Fehlermeldung,
-                statusCode: StatusCodes.Status503ServiceUnavailable,
-                title: "Datenbank nicht verfügbar"),
+            _ => DatenbankNichtVerfuegbar(ergebnis.Fehlermeldung),
         };
     }
 }
