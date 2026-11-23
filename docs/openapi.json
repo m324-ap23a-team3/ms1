@@ -1,0 +1,441 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "MS1 Mitarbeiter API",
+    "description": "Microservice 1 des Ticketsystems (M324, Team 3): Mitarbeiter erfassen (US1) und auslesen (US2). Fehler kommen als ProblemDetails (RFC 9457).",
+    "version": "v1"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Betrieb"
+        ],
+        "summary": "Health-Check",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/mitarbeiter": {
+      "post": {
+        "tags": [
+          "Mitarbeiter"
+        ],
+        "summary": "US1: Mitarbeiter erfassen.",
+        "description": "Erfasst einen neuen Mitarbeiter. Alle Felder sind Pflicht. Die ID vergibt der Service automatisch. Beitrittsdatum im Format TT.MM.JJJJ (z. B. 15.05.2021) oder JJJJ-MM-TT, Skilllevel ganze Zahl von 1 bis 5. Bei ungültigen Eingaben kommt 400 mit einer Meldung pro Feld in `errors`.",
+        "operationId": "MitarbeiterErfassen",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/MitarbeiterErfassenRequest"
+                  }
+                ]
+              },
+              "examples": {
+                "Spezifikation": {
+                  "summary": "Beispiel aus der Spezifikation (Datum TT.MM.JJJJ)",
+                  "value": {
+                    "vorname": "Max",
+                    "nachname": "Muster",
+                    "beitrittsdatum": "15.05.2021",
+                    "skilllevel": 4
+                  }
+                },
+                "IsoDatum": {
+                  "summary": "Datum im ISO-Format JJJJ-MM-TT",
+                  "value": {
+                    "vorname": "Anna",
+                    "nachname": "Beispiel",
+                    "beitrittsdatum": "2020-01-31",
+                    "skilllevel": 2
+                  }
+                },
+                "Ungueltig": {
+                  "summary": "Ungültig: ergibt 400",
+                  "value": {
+                    "vorname": "",
+                    "beitrittsdatum": "31.02.2021",
+                    "skilllevel": 6
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MitarbeiterResponse"
+                },
+                "examples": {
+                  "Erfasst": {
+                    "summary": "Mitarbeiter erfasst, ID vergeben",
+                    "value": {
+                      "id": 1,
+                      "vorname": "Max",
+                      "nachname": "Muster",
+                      "beitrittsdatum": "15.05.2021",
+                      "skilllevel": 4
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                },
+                "examples": {
+                  "Validierung": {
+                    "summary": "Meldung pro ungültigem Feld",
+                    "value": {
+                      "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+                      "title": "Die Eingaben sind ungültig.",
+                      "status": 400,
+                      "detail": "Bitte die markierten Felder korrigieren.",
+                      "errors": {
+                        "vorname": [
+                          "Vorname ist ein Pflichtfeld."
+                        ],
+                        "nachname": [
+                          "Nachname ist ein Pflichtfeld."
+                        ],
+                        "beitrittsdatum": [
+                          "Beitrittsdatum «31.02.2021» ist kein gültiges Datum. Erwartet wird TT.MM.JJJJ, z. B. «15.05.2021»."
+                        ],
+                        "skilllevel": [
+                          "Skilllevel muss zwischen 1 und 5 liegen, war aber 6."
+                        ]
+                      }
+                    }
+                  },
+                  "FalscherTyp": {
+                    "summary": "Falscher Datentyp, z. B. \"skilllevel\": \"vier\"",
+                    "value": {
+                      "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+                      "title": "Die Eingaben sind ungültig.",
+                      "status": 400,
+                      "detail": "Der Request konnte nicht gelesen werden. Bitte die markierten Felder korrigieren.",
+                      "errors": {
+                        "skilllevel": [
+                          "Skilllevel muss eine ganze Zahl von 1 bis 5 sein."
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "DatenbankNichtErreichbar": {
+                    "summary": "Datenbank nicht erreichbar",
+                    "value": {
+                      "type": "https://tools.ietf.org/html/rfc9110#section-15.6.4",
+                      "title": "Datenbank nicht verfügbar",
+                      "status": 503,
+                      "detail": "Der Mitarbeiter konnte wegen eines Datenbankfehlers nicht gespeichert werden. Bitte später erneut versuchen."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Mitarbeiter"
+        ],
+        "summary": "US2: Alle Mitarbeiter auslesen.",
+        "description": "Liefert alle erfassten Mitarbeiter mit allen Feldern, sortiert nach ID. Ist noch niemand erfasst, kommt 200 mit leerer Liste und einer Meldung. MS2 verwendet diesen Endpunkt, um bei US3 zu prüfen, ob ein Mitarbeiter existiert (Feld `mitarbeiter[].id`).",
+        "operationId": "MitarbeiterAuslesen",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MitarbeiterListeResponse"
+                },
+                "examples": {
+                  "MitEintraegen": {
+                    "summary": "Liste mit Mitarbeitern",
+                    "value": {
+                      "anzahl": 2,
+                      "meldung": "2 Mitarbeiter gefunden.",
+                      "mitarbeiter": [
+                        {
+                          "id": 1,
+                          "vorname": "Max",
+                          "nachname": "Muster",
+                          "beitrittsdatum": "15.05.2021",
+                          "skilllevel": 4
+                        },
+                        {
+                          "id": 2,
+                          "vorname": "Anna",
+                          "nachname": "Beispiel",
+                          "beitrittsdatum": "31.01.2020",
+                          "skilllevel": 2
+                        }
+                      ]
+                    }
+                  },
+                  "Leer": {
+                    "summary": "Noch keine Mitarbeiter erfasst",
+                    "value": {
+                      "anzahl": 0,
+                      "meldung": "Es sind noch keine Mitarbeiter erfasst.",
+                      "mitarbeiter": [ ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "DatenbankNichtErreichbar": {
+                    "summary": "Datenbank nicht erreichbar",
+                    "value": {
+                      "type": "https://tools.ietf.org/html/rfc9110#section-15.6.4",
+                      "title": "Datenbank nicht verfügbar",
+                      "status": 503,
+                      "detail": "Die Mitarbeiter konnten wegen eines Datenbankfehlers nicht geladen werden. Bitte später erneut versuchen."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HttpValidationProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "MitarbeiterErfassenRequest": {
+        "required": [
+          "vorname",
+          "nachname",
+          "beitrittsdatum",
+          "skilllevel"
+        ],
+        "type": "object",
+        "properties": {
+          "vorname": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Vorname, Pflicht, z. B. «Max»."
+          },
+          "nachname": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Nachname, Pflicht, z. B. «Muster»."
+          },
+          "beitrittsdatum": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Firmeneintritt im Format TT.MM.JJJJ (z. B. «15.05.2021») oder JJJJ-MM-TT."
+          },
+          "skilllevel": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Skilllevel als Support-Mitarbeiter, ganze Zahl von 1 bis 5.",
+            "format": "int32"
+          }
+        },
+        "description": "Request-Body für `POST /api/mitarbeiter` (US1).\r\nAlle Felder sind nullable, damit fehlende Felder im Service mit einer verständlichen Meldung\r\npro Feld abgelehnt werden statt mit einem allgemeinen JSON-Fehler."
+      },
+      "MitarbeiterListeResponse": {
+        "required": [
+          "anzahl",
+          "meldung",
+          "mitarbeiter"
+        ],
+        "type": "object",
+        "properties": {
+          "anzahl": {
+            "type": "integer",
+            "description": "Anzahl Mitarbeiter in der Liste.",
+            "format": "int32"
+          },
+          "meldung": {
+            "type": "string",
+            "description": "Lesbare Zusammenfassung, bei leerer Liste der Hinweis, dass keine Mitarbeiter erfasst sind (AK5)."
+          },
+          "mitarbeiter": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MitarbeiterResponse"
+            },
+            "description": "Alle Mitarbeiter mit allen Feldern, nach ID sortiert."
+          }
+        },
+        "description": "Antwort von `GET /api/mitarbeiter` (US2). Immer dieselbe Struktur, auch wenn die Liste leer ist,\r\ndamit Clients wie MS2 sie einfach auswerten können."
+      },
+      "MitarbeiterResponse": {
+        "required": [
+          "id",
+          "vorname",
+          "nachname",
+          "beitrittsdatum",
+          "skilllevel"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Eindeutige, automatisch vergebene ID. MS2 referenziert damit den Mitarbeiter.",
+            "format": "int32"
+          },
+          "vorname": {
+            "type": "string",
+            "description": "Vorname."
+          },
+          "nachname": {
+            "type": "string",
+            "description": "Nachname."
+          },
+          "beitrittsdatum": {
+            "type": "string",
+            "description": "Firmeneintritt im Format TT.MM.JJJJ, z. B. «15.05.2021»."
+          },
+          "skilllevel": {
+            "type": "integer",
+            "description": "Skilllevel 1 bis 5.",
+            "format": "int32"
+          }
+        },
+        "description": "Ein Mitarbeiter, wie ihn die API zurückgibt (US1 und US2)."
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Betrieb"
+    },
+    {
+      "name": "Mitarbeiter"
+    }
+  ]
+}
