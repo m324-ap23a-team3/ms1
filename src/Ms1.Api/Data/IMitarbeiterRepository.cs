@@ -10,4 +10,7 @@ public interface IMitarbeiterRepository
 {
     /// <summary>Speichert einen neuen Mitarbeiter und gibt ihn mit der vergebenen ID zurück.</summary>
     Task<Mitarbeiter> HinzufuegenAsync(Mitarbeiter mitarbeiter, CancellationToken cancellationToken = default);
+
+    /// <summary>Liest alle Mitarbeiter, sortiert nach ID. Nur lesend, ohne Change-Tracking.</summary>
+    Task<IReadOnlyList<Mitarbeiter>> AlleLesenAsync(CancellationToken cancellationToken = default);
 }
