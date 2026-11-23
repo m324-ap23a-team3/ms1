@@ -47,4 +47,18 @@ public class FakeMitarbeiterRepository : IMitarbeiterRepository
             return Task.FromResult(mitarbeiter);
         }
     }
+
+    public Task<IReadOnlyList<Mitarbeiter>> AlleLesenAsync(CancellationToken cancellationToken = default)
+    {
+        lock (_lock)
+        {
+            if (Fehler is not null)
+            {
+                throw Fehler;
+            }
+
+            IReadOnlyList<Mitarbeiter> kopie = [.. _mitarbeiter.OrderBy(m => m.Id)];
+            return Task.FromResult(kopie);
+        }
+    }
 }
