@@ -35,3 +35,7 @@ dotnet ef migrations add <Name> --project src/Ms1.Api --output-dir Data/Migratio
 ```
 
 Das Passwort in `docker-compose.yml` und `appsettings.Development.json` gilt nur für die lokale Entwicklungs-DB. Eigene Werte lassen sich über eine `.env`-Datei (`MS1_DB_PASSWORT`, `MS1_DB_PORT`) setzen; die Datei ist in `.gitignore`.
+
+## Architektur
+
+Endpoints → Service → `IMitarbeiterRepository` → EF Core/MariaDB. Die Tests ersetzen das Repository durch `FakeMitarbeiterRepository` und laufen ohne Datenbank. Beschreibung: [team/docs/Applikation.md](https://github.com/m324-ap23a-team3/team/blob/main/docs/Applikation.md#ms1-testbare-architektur)

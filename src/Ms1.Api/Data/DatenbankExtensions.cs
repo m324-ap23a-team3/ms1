@@ -29,6 +29,8 @@ public static class DatenbankExtensions
             options.UseMySql(connectionString, ServerVersion, mysql => mysql.EnableRetryOnFailure());
         });
 
+        services.AddScoped<IMitarbeiterRepository, MitarbeiterRepository>();
+
         return services;
     }
 
